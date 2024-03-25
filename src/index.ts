@@ -29,7 +29,7 @@ const server = Bun.serve<User>({
     open(ws) {
 	    ws.subscribe(ws.data.room)
 	    ws.data.userid = generateUniqueID();
-      ws.send(`{"type": "info" , "userId": ${ws.data.userid}, "room": ${ws.data.room}}`);
+      ws.send(`{"room": "info" , "userId": ${ws.data.userid}}`);
       arrayClients.push(ws);
     },
 
@@ -49,7 +49,7 @@ const server = Bun.serve<User>({
 		  
           if (!ws.data.userid) return handleUsername(ws, message);
           if (!ws.data.room) return handleRoom(ws, message);
-          ws.publish(ws.data.room, `${ws.data.userid}: ${message}`);
+          ws.publish(ws.data.room, `${message}`);
 
       } catch (error) {
         console.error("Error al analizar el mensaje:", error);
