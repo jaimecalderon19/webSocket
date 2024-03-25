@@ -29,7 +29,11 @@ const server = Bun.serve<User>({
     open(ws) {
 	    ws.subscribe(ws.data.room)
 	    ws.data.userid = generateUniqueID();
-      ws.send(`{"room": "info" , "userId": ${ws.data.userid}}`);
+      let data = {
+        room: 'info',
+        userId: ws.data.userid
+      }
+      ws.send(JSON.stringify(data));
       arrayClients.push(ws);
     },
 
