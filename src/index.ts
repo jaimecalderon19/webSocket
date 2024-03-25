@@ -1,5 +1,5 @@
 import { ServerWebSocket } from "bun";
-import { generateUniqueID } from "./utils";
+import { generateUniqueID, handleRoom, handleUsername } from "./utils";
 
 const user = {
   room: "notifications",
@@ -29,7 +29,7 @@ const server = Bun.serve<User>({
     open(ws) {
 	    ws.subscribe(ws.data.room)
 	    ws.data.userid = generateUniqueID();
-      ws.send(`userId: ${ws.data.userid} room: ${ws.data.room}`);
+      ws.send(`{"type": "info" , "userId": ${ws.data.userid}, "room": ${ws.data.room}}`);
       arrayClients.push(ws);
     },
 
@@ -39,32 +39,18 @@ const server = Bun.serve<User>({
       try {
         const parsedMessage = JSON.parse(message);
 
-        arrayClients.forEach(client => {
-          if (parsedMessage.to && parsedMessage.to === client.data.userid) {
-            // Verificar si el mensaje tiene un destinatario específico
-            console.log("enconro un user");
-            const responseMessage = {
-              type: "message",
-              content: parsedMessage.content,
-            };
-            client.send(JSON.stringify(responseMessage));
-          }
-        });
-
-        // if (parsedMessage.to && parsedMessage.to === ws.data.userid) {
-        //   // Verificar si el mensaje tiene un destinatario específico
-        //   const responseMessage = {
-        //     type: "message",
-        //     content: parsedMessage.content,
-        //   };
-        //   ws.send(JSON.stringify(responseMessage));
-        // } else {
+        // arrayClients.forEach(client => {
+        //   if (parsedMessage.to && parsedMessage.to === client.data.userid) {
+        //     client.send(message);
+        //     return;
+        //   }
+        // });
 
 		  
-        //   if (!ws.data.userid) return handleUsername(ws, message);
-        //   if (!ws.data.room) return handleRoom(ws, message);
-        //   ws.publish(ws.data.room, `${ws.data.userid}: ${message}`);
-        // }
+          if (!ws.data.userid) return handleUsername(ws, message);
+          if (!ws.data.room) return handleRoom(ws, message);
+          ws.publish(ws.data.room, `${ws.data.userid}: ${message}`);
+
       } catch (error) {
         console.error("Error al analizar el mensaje:", error);
       }
@@ -72,6 +58,11 @@ const server = Bun.serve<User>({
     close(ws) {
       if (!ws.data.room) return;
       server.publish(ws.data.room, `${ws.data.userid} has left the room`);
+      for (let i = arrayClients.length - 1; i >= 0; i--) {
+        if (arrayClients[1].data.userid === ws.data.userid) {
+            arrayClients.splice(i, 1);
+        }
+      }
     },
   },
 });
