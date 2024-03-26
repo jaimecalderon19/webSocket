@@ -61,7 +61,6 @@ const server = Bun.serve<User>({
     },
     close(ws) {
       if (!ws.data.room) return;
-      server.publish(ws.data.room, `${ws.data.userid} has left the room`);
       for (let i = arrayClients.length - 1; i >= 0; i--) {
         if (arrayClients[1].data.userid === ws.data.userid) {
             arrayClients.splice(i, 1);
